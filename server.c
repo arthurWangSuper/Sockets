@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     char    buff[4096];
     int     n;
 
-    if( (listenfd = socket(AF_INET, SOCK_STREAM|SOCK_NONBLOCK, 0)) == -1 ){
+    if( (listenfd = socket(AF_INET, SOCK_STREAM, 0)) == -1 ){
     printf("create socket error: %s(errno: %d)\n",strerror(errno),errno);
     exit(0);
     }
@@ -35,17 +35,23 @@ int main(int argc, char** argv)
     exit(0);
     }
 
-    printf("======waiting for client's request======\n");
-    while(1){
     if( (connfd = accept(listenfd, (struct sockaddr*)NULL, NULL)) == -1){
         printf("accept socket error: %s(errno: %d)",strerror(errno),errno);
-        continue;
     }
-    n = recv(connfd, buff, MAXLINE, 0);
-    buff[n] = '\0';
-    printf("recv msg from client: %s\n", buff);
-    close(connfd);
+    while(1){
+    	n = recv(connfd, buff, MAXLINE, 0);
+    	if(n == -1)
+	{
+		printf("====rst!!!====\r\n");
+		close(connfd);
+		exit(5);
+	}
+        buff[n] = '\0';
+    	printf("recv msg from client: %s\n", buff);
+    	send(connfd,buff,n,0);
+	close(connfd);
     }
 
     close(listenfd);
+    return 0;
 }

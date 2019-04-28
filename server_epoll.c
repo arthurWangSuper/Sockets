@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     int    listenfd, connfd;
     struct sockaddr_in     servaddr;
     char    buff[4096];
-    int     n;
+    int     n,i;
 	int flag =1;
 	int len = sizeof(int);
 	int epfd;
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 	if(epfd == -1)
 		printf("epoll_create failed!!!");
 
-    if( (listenfd = socket(AF_INET, SOCK_STREAM|SOCK_NONBLOCK, 0)) == -1 ){
+    if( (listenfd = socket(AF_INET, SOCK_STREAM, 0)) == -1 ){
     	printf("create socket error: %s(errno: %d)\n",strerror(errno),errno);
     	exit(0);
     }
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
 	}
 	printf("Ready: %d",ready);
 
-	for(int i = 0;i<ready;i++)
+	for(i = 0;i<ready;i++)
 	{
 		if(evlist[i].events&EPOLLIN)
 		{
@@ -92,11 +92,18 @@ int main(int argc, char** argv)
     if( (connfd = accept(listenfd, (struct sockaddr*)NULL, NULL)) == -1){
         printf("accept socket error: %s(errno: %d)",strerror(errno),errno);
     }
-
+while(1){
     n = recv(connfd, buff, MAXLINE, 0);
+    if(n == -1)
+    {
+	printf("====rst===!!!\r\n");
+    	close(connfd);
+	close(listenfd);
+	exit(100);
+    }
     buff[n] = '\0';
     printf("recv msg from client: %s\n", buff);
-
+}
 	char *sendbuf = "byebye";
 	//test SIGPIPE 
 	//first send rcv RST
@@ -107,5 +114,6 @@ int main(int argc, char** argv)
 	sleep(10);
 	close(connfd);
 
-    close(listenfd);
+        close(listenfd);
+	return 0;
 }
